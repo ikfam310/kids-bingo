@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1976d2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ビンゴ"> <link rel="apple-touch-icon" href="icon.png"> <title>おてつだいビンゴ・DX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script src="bingo-list.js"></script>
+    <script src="script.js"></script>
+    <style>
+        :root { --oni-color: #1976d2; --imouto-color: #e91e63; --bingo-yellow: #fff9c4; }
+        
+        body { 
+            font-family: 'Kiwi Maru', serif; 
+            margin: 0; padding: 0; 
+            height: 100vh; overflow: hidden; 
+            touch-action: pan-y; /* 縦スクロールを防止し左右スワイプを許可 */
+            background: #333; 
+        }
+        
+        /* スライダー構造 */
+        .slider-container { width: 100vw; height: 100vh; overflow: hidden; position: relative; }
+        .slider-track { 
+            display: flex; 
+            width: 200vw; 
+            height: 100%; 
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1); 
+        }
+        
+        /* ページ共通 */
+        .page { 
+            width: 100vw; height: 100%; 
+            display: flex; flex-direction: column; 
+            align-items: center; padding: 10px; 
+            box-sizing: border-box; 
+        }
+        .page.oni { background-color: #e3f2fd; }
+        .page.imouto { background-color: #fce4ec; }
+
+        h1 { font-size: min(4vh, 24px); margin: 5px 0; }
+        .oni h1 { color: var(--oni-color); }
+        .imouto h1 { color: var(--imouto-color); }
+
+        .reward { font-size: 12px; color: #666; margin-bottom: 5px; }
+        
+        /* ビンゴボード */
+        .board-container { 
+            flex: 1; width: 100%; max-width: 500px; 
+            display: flex; align-items: center; justify-content: center; 
+            min-height: 0; padding: 5px; 
+            box-sizing: border-box;
+        }
+        .board { 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            grid-template-rows: repeat(5, 1fr); 
+            gap: 6px; width: 100%; height: 100%; 
+            background: #fff; padding: 10px; 
+            border-radius: 15px; border: 4px solid; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+            box-sizing: border-box;
+        }
+        .oni .board { border-color: var(--oni-color); }
+        .imouto .board { border-color: var(--imouto-color); }
+
+        /* セル */
+        .cell { 
+            background: #fff; border-radius: 8px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: clamp(10px, 1.8vh, 16px); 
+            font-weight: bold; cursor: pointer; 
+            border: 2px solid #ddd; padding: 4px; 
+            line-height: 1.2; user-select: none; 
+            word-break: break-all; text-align: center; 
+            box-shadow: 0 3px #eee;
+        }
+        .cell.active { 
+            background: var(--bingo-yellow) !important; 
+            border-color: #fbc02d !important; 
+            transform: translateY(2px); 
+            box-shadow: none;
+        }
+        .free { background: #ffe0b2 !important; border-color: #ff9800 !important; color: #e65100; }
+
+        .reset-btn { 
+            margin: 10px; padding: 8px 30px; 
+            border-radius: 20px; border: none; 
+            background: #bbb; color: white; 
+            font-size: 12px; cursor: pointer;
+        }
+        
+        /* ページ表示ドット */
+        .dots { 
+            position: fixed; bottom: 15px; left: 50%; 
+            transform: translateX(-50%); display: flex; gap: 12px; 
+        }
+        .dot { width: 10px; height: 10px; background: rgba(0,0,0,0.15); border-radius: 50%; }
+        .dot.active { background: rgba(0,0,0,0.5); transform: scale(1.2); }
+
+        /* 動物演出 */
+        .animal { 
+            position: fixed; font-size: 80px; z-index: 1000; 
+            pointer-events: none; bottom: -100px; left: -100px; 
+            animation: animal-jump 3s ease-out forwards; 
+        }
+
+
+        /* 左下から右上へ突き抜ける動き */
+        @keyframes animal-jump { 
+            0% { 
+                transform: translate(0, 0) rotate(-20deg); 
+                opacity: 0;
+            } 
+            10% {
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(120vw, -120vh) rotate(10deg); 
+                opacity: 1;
+            } 
+        }
+
+        /* 絵文字の初期位置を左下に固定 */
+        .animal { 
+            position: fixed; 
+            font-size: clamp(60px, 10vw, 100px); 
+            z-index: 1000; 
+            pointer-events: none; 
+            bottom: -100px; /* 画面の下の外 */
+            left: -100px;   /* 画面の左の外 */
+            animation: animal-jump 2.5s ease-in forwards; 
+        }
+
+</style>
+</head>
+<body>
+    <div class="slider-container">
+        <div class="slider-track" id="sliderTrack">
+            <section class="page oni">
+                <h1>お兄ちゃん BINGO ✨</h1>
+                <div class="reward">全部そろったら「ズドドドーン！」</div>
+                <div class="board-container"><div id="board-oni" class="board"></div></div>
+                <button class="reset-btn" onclick="confirmReset('oni')">新しくする</button>
+            </section>
+            <section class="page imouto">
+                <h1>妹ちゃん BINGO ✨</h1>
+                <div class="reward">全部そろったら「ズドドドーン！」</div>
+                <div class="board-container"><div id="board-imouto" class="board"></div></div>
+                <button class="reset-btn" onclick="confirmReset('imouto')">新しくする</button>
+            </section>
+        </div>
+    </div>
+    <div class="dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+    </div>
+</body>
+</html>
