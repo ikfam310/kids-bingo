@@ -117,11 +117,12 @@ function checkBingo(user, silent = false) {
     
     const activeCount = active.filter(a => a).length;
     
+    // 全部のマスが埋まった時の超豪華演出
     if (activeCount === 25) {
         if (!silent && board.dataset.isFull !== "true") {
             playFanfare();
             spawnCustomEmoji(user, 15);
-            confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
+            celebrate(user, true); // 豪華版エフェクト
             board.dataset.isFull = "true";
         }
         return;
@@ -137,9 +138,67 @@ function checkBingo(user, silent = false) {
     const prevBingos = parseInt(board.dataset.prevBingos || 0);
     if (!silent && currentBingos > prevBingos) {
         spawnCustomEmoji(user, 4);
-        confetti({ particleCount: 100, spread: 70 });
+        celebrate(user, false); // 通常ビンゴエフェクト
     }
     board.dataset.prevBingos = currentBingos;
+}
+
+// --- ビンゴ演出切り替え用関数 ---
+function celebrate(user, isFull) {
+    const scalar = isFull ? 3 : 2;
+    
+    if (user === 'oni') {
+        // 瑛太くん：モンスター撃退（炎と爆発と宝石）
+        confetti({
+            particleCount: isFull ? 200 : 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#ff4500', '#ff8c00', '#7fff00']
+        });
+        
+        // 撃退後にモンスターとお宝が降る
+        setTimeout(() => {
+            const monster = confetti.shapeFromText({ text: '👾', scalar });
+            const treasure = confetti.shapeFromText({ text: '💎', scalar });
+            confetti({
+                shapes: [monster, treasure],
+                particleCount: isFull ? 40 : 15,
+                scalar: scalar
+            });
+        }, 300);
+
+    } else {
+        // 茉衣ちゃん：虹色のふわふわ紙吹雪とネコ
+        const colors = ['#ffc0cb', '#add8e6', '#e6e6fa', '#fffacd'];
+        
+        // 左右からパステル吹雪
+        confetti({
+            particleCount: isFull ? 150 : 60,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0, y: 0.6 },
+            colors: colors
+        });
+        confetti({
+            particleCount: isFull ? 150 : 60,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1, y: 0.6 },
+            colors: colors
+        });
+
+        // 最後にネコとキラキラ
+        setTimeout(() => {
+            const cat = confetti.shapeFromText({ text: '🐱', scalar });
+            const star = confetti.shapeFromText({ text: '✨', scalar });
+            confetti({
+                shapes: [cat, star],
+                particleCount: isFull ? 30 : 10,
+                scalar: scalar,
+                gravity: 0.5
+            });
+        }, 500);
+    }
 }
 
 // --- データ保存 ---
