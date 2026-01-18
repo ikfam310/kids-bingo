@@ -253,7 +253,7 @@ function initBingo(user) {
     items.forEach((item, i) => {
         const div = document.createElement('div');
         div.className = 'cell' + (item.active ? ' active' : '') + (i === 12 ? ' free' : '');
-        div.innerText = item.text;
+        div.innerHTML = item.text;
         div.style.borderColor = borderColors[i % borderColors.length];
         
         div.onclick = function() {
@@ -279,3 +279,4 @@ window.onload = () => {
     initBingo('imouto');
     initSwipe();
 };
+
