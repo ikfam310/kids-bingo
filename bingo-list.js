@@ -24,14 +24,14 @@ const BINGO_CONFIG = {
         list: LIST_ONI,
         themeColor: "#1976d2",
         bgColor: "#e3f2fd",
-        emojis: ['🐍', '🦈', '🐙', '🐋', '🦂', '🐉', '⚔', '🍖', '🪳'], 
+        emojis: ['🐍', '🦈', '🐦‍🔥', '🌪', '🦂', '🐉', '🐊', '🍖', '🪳'], 
         title: "EITA BINGO ✨"
     },
     imouto: {
         list: LIST_IMOUTO,
         themeColor: "#e91e63",
         bgColor: "#fce4ec",
-        emojis: ['🐱', '🐈', '🐾', '🩰', '🐣', '🍭', '🐧', '🌸', '🧸'], 
+        emojis: ['🐱','🌸', '🧸', '🐈', '🐾', '🩰', '🐣', '🍭', '🐧' ], 
         title: "MAI BINGO ✨"
     }
 };
@@ -41,5 +41,6 @@ const BINGO_LISTS = {
     oni: BINGO_CONFIG.oni.list,
     imouto: BINGO_CONFIG.imouto.list
 };
+
 
 
